@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 my $gitExecutable = "/usr/bin/git";
+my $debug = 0;
 
 # name of the branch that should never be merged into another branch
 my @forbiddenMergeBranches = ("Ticket_Test_Branch");
@@ -15,7 +16,9 @@ $| = 1;
 my @branchPattern = ("\\bbranch\\b[^-]*\$","\\bcheckout\\b.*-[Bb]");
 my @mergePattern = ("\\bmerge\\b");
 
-my @alias = split('\n', `$gitExecutable config -l | grep -e "^alias.*\\(checkout\\|branch\\|merge\\)"`);
+my $aliases = `$gitExecutable config -l | grep -e "^alias.*\\(checkout\\|branch\\|merge\\)"`;
+$debug && print "Aliases:\n$aliases\n";
+my @alias = split('\n', $aliases);
 
 for (my $i = 0; $i < @alias; $i++) {
   my ($key, $value) = split('=', $alias[$i]);
@@ -27,9 +30,12 @@ for (my $i = 0; $i < @alias; $i++) {
     } elsif ($value =~ m/branch/) {
       $key .= "[^-]+\$";
     }
+    print "Key: $key, Value: $value\n";
     if ($value =~ m/merge/) {
+      $debug && print "MergePattern: $key\n";
       push(@mergePattern, $key);
     } else {
+      $debug && print "BranchPattern: $key\n";
       push(@branchPattern, $key);
     }
   }
@@ -43,6 +49,7 @@ my $args = join(' ', &prepareArgs(@ARGV));
 if (&matchesAny($args, @branchPattern)) {
   my $branchname = `$gitExecutable branch | grep '^*'`;
   chomp($branchname);
+  $debug && print "Branchname: $branchname\n";
   if ($branchname eq "") {
     exit 1;
   }
@@ -74,14 +81,18 @@ exit 0;
 
 sub relevantValue {
   my $string = shift @_;
-  return $string !~ m/f()/ && (($string =~ m/^merge$/ || ($string =~ m/^branch/ && $string !~ m/-/)));
+  return $string !~ m/f()/ && (($string =~ m/\bmerge\b/ || $string =~ /\bcheckout\b/ || ($string =~ m/^branch/ && $string !~ m/-/)));
 }
 
 sub matchesAny {
   my ($string, @pattern) = @_;
   for (my $i = 0; $i < @pattern; $i++) {
+    $debug && print "$string matches $pattern[$i]: ";
     if ($string =~ m/$pattern[$i]/) {
+      $debug && print "yes!\n";
       return 1;
+    } else {
+      $debug && print "no!\n";
     }
   }
 }
