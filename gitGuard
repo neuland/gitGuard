@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $gitExecutable = "/usr/bin/git";
+
+# name of the branch that should never be merged into another branch
+my @forbiddenMergeBranches = ("Ticket_Test_Branch");
+
+# Enable autoflushing
+$| = 1;
+
+# find relevant aliases and add them to @mergePattern or @branchPattern
+my @branchPattern = ("\\bbranch\\b[^-]*\$","\\bcheckout\\b.*-[Bb]");
+my @mergePattern = ("\\bmerge\\b");
+
+my @alias = split('\n', `$gitExecutable config -l | grep -e "^alias.*\\(checkout\\|branch\\|merge\\)"`);
+
+for (my $i = 0; $i < @alias; $i++) {
+  my ($key, $value) = split('=', $alias[$i]);
+  $key =~ s/^alias./\\b/;
+  if (&relevantValue($value)) {
+    $key .= "\\b";
+    if ($value =~ m/checkout/ && $value !~ m/-[Bb]/) {
+      $key .= ".*-[bB]";
+    } elsif ($value =~ m/branch/) {
+      $key .= "[^-]+\$";
+    }
+    if ($value =~ m/merge/) {
+      push(@mergePattern, $key);
+    } else {
+      push(@branchPattern, $key);
+    }
+  }
+}
+
+# join all args into a string, surrounding params including spaces with quotes
+my $args = join(' ', &prepareArgs(@ARGV));
+
+# exit with a failure if something problematic is tries,
+# so that the following (external) call to git is not executed.
+if (&matchesAny($args, @branchPattern)) {
+  my $branchname = `$gitExecutable branch | grep '^*'`;
+  chomp($branchname);
+  if ($branchname eq "") {
+    exit 1;
+  }
+  $branchname =~ s/^\* (\S*).*/$1/;
+  if ($branchname !~ m/^master$/) {
+    print "\nYou are about to branch from '$branchname'.\n";
+    print "Do you really want to do this?\n";
+    print "\n  Type 'yes' if you do.\n\n";
+    my $input = <STDIN>;
+    if ($input !~ m/^yes$/) {
+      exit 1;
+    }
+  }
+} elsif (&matchesAny($args, @mergePattern)) {
+  for (my $i = 0; $i < @forbiddenMergeBranches; $i++) {
+    if ($args =~ /\b$forbiddenMergeBranches[$i]\b/) {
+      print "You should never merge '$forbiddenMergeBranches[$i]' into another branch...\n";
+      exit 1;
+    }
+  }
+}
+
+# exit with success, so that the following (external) call to git is executed
+exit 0;
+
+#####################
+# subroutines below #
+#####################
+
+sub relevantValue {
+  my $string = shift @_;
+  return $string !~ m/f()/ && (($string =~ m/^merge$/ || ($string =~ m/^branch/ && $string !~ m/-/)));
+}
+
+sub matchesAny {
+  my ($string, @pattern) = @_;
+  for (my $i = 0; $i < @pattern; $i++) {
+    if ($string =~ m/$pattern[$i]/) {
+      return 1;
+    }
+  }
+}
+
+sub prepareArgs {
+  my @result;
+  for (my $i = 0; $i < @_; $i++) {
+    if ($_[$i] =~ m/ /) {
+      $_[$i] = '"' . $_[$i] . '"';
+    }
+    push(@result, $_[$i]);
+  }
+  return @result;
+}
