@@ -30,7 +30,6 @@ for (my $i = 0; $i < @alias; $i++) {
     } elsif ($value =~ m/branch/) {
       $key .= "[^-]+\$";
     }
-    print "Key: $key, Value: $value\n";
     if ($value =~ m/merge/) {
       $debug && print "MergePattern: $key\n";
       push(@mergePattern, $key);
