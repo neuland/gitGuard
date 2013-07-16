@@ -84,9 +84,9 @@ sub relevantValue {
 }
 
 sub matchesAny {
-  my ($string, $completeMatch, @pattern) = @_;
+  my ($string, $boundedMatch, @pattern) = @_;
   for (my $i = 0; $i < @pattern; $i++) {
-    my $pattern = ($completeMatch ? "\\b$pattern[$i]\\b" : "$pattern[$i]");
+    my $pattern = ($boundedMatch ? "\\b$pattern[$i]\\b" : "$pattern[$i]");
     $debug && print "$string matches $pattern: ";
     if ($string =~ m/$pattern/) {
       $debug && print "yes!\n";
