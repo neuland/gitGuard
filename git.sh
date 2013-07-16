@@ -1,3 +1,3 @@
 git(){
-  ~/.gitGuard/gitGuard "$@" && /usr/bin/git "$@"
+  ~/.gitGuard/gitGuard "$@" && `which git` "$@"
 }

@@ -3,8 +3,8 @@
 use strict;
 use warnings;
 
-my $gitExecutable = "/usr/bin/git";
 my $debug = 0;
+my $gitExecutable = &getGitExecutable();
 
 # name of the branch that should never be merged into another branch
 my @forbiddenMergeBranches = ("Ticket_Test_Branch");
@@ -105,4 +105,11 @@ sub prepareArgs {
     push(@result, $_[$i]);
   }
   return @result;
+}
+
+sub getGitExecutable {
+  my $git = `which git`;
+  chomp($git);
+  $debug && print "Git: $gitExecutable\n";
+  return $git;
 }
