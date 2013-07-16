@@ -6,8 +6,8 @@ use warnings;
 my $debug = 0;
 my $gitExecutable = &getGitExecutable();
 
-# name of the branch that should never be merged into another branch
 my @forbiddenMergeBranches = ("Ticket_Test_Branch");
+my @allowedBranchBranches = ("master");
 
 # Enable autoflushing
 $| = 1;
@@ -45,7 +45,7 @@ my $args = join(' ', &prepareArgs(@ARGV));
 
 # exit with a failure if something problematic is tries,
 # so that the following (external) call to git is not executed.
-if (&matchesAny($args, @branchPattern)) {
+if (&matchesAny($args, 0, @branchPattern)) {
   my $branchname = `$gitExecutable branch | grep '^*'`;
   chomp($branchname);
   $debug && print "Branchname: $branchname\n";
@@ -53,7 +53,7 @@ if (&matchesAny($args, @branchPattern)) {
     exit 1;
   }
   $branchname =~ s/^\* (\S*).*/$1/;
-  if ($branchname !~ m/^master$/) {
+  unless (&matchesAny($branchname, 1, @allowedBranchBranches)) {
     print "\nYou are about to branch from '$branchname'.\n";
     print "Do you really want to do this?\n";
     print "\n  Type 'yes' if you do.\n\n";
@@ -62,7 +62,7 @@ if (&matchesAny($args, @branchPattern)) {
       exit 1;
     }
   }
-} elsif (&matchesAny($args, @mergePattern)) {
+} elsif (&matchesAny($args, 0, @mergePattern)) {
   for (my $i = 0; $i < @forbiddenMergeBranches; $i++) {
     if ($args =~ /\b$forbiddenMergeBranches[$i]\b/) {
       print "You should never merge '$forbiddenMergeBranches[$i]' into another branch...\n";
@@ -84,10 +84,11 @@ sub relevantValue {
 }
 
 sub matchesAny {
-  my ($string, @pattern) = @_;
+  my ($string, $completeMatch, @pattern) = @_;
   for (my $i = 0; $i < @pattern; $i++) {
-    $debug && print "$string matches $pattern[$i]: ";
-    if ($string =~ m/$pattern[$i]/) {
+    my $pattern = ($completeMatch ? "\\b$pattern[$i]\\b" : "$pattern[$i]");
+    $debug && print "$string matches $pattern: ";
+    if ($string =~ m/$pattern/) {
       $debug && print "yes!\n";
       return 1;
     } else {
