@@ -13,7 +13,7 @@ Perl wrapper for git to restrict branching and merging
 - set up `@forbiddenMergeBranches` to include the names of those branches that are never allowed to be merged into other branches.
 - set up `@allowedBranchBranches` to include the names of those branches that git should be allowed to branch off of.
 
-If you use gitGuard in conjunction with multigit, be sure to set `gitCommand = . ~/.gitGuard/git.sh && git` in your `.multigit.conf`, so that multigit uses gitGuard.
+If you use gitGuard in conjunction with [multigit](https://github.com/neuland/multigit), be sure to set `gitCommand = . ~/.gitGuard/git.sh && git` in your `.multigit.conf`, so that multigit uses gitGuard.
 
 ## Usage example:
 
