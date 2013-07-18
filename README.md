@@ -5,15 +5,19 @@ Perl wrapper for git to restrict branching and merging
 
 ## Installation:
 
-- `mkdir ~/.gitGuard`
-- `cp gitGuard git.sh ~/.gitGuard`
-- add `. ~/.gitGuard/git.sh` into your .bashrc (or whatever shell / configuration you use) to 'activate' gitGuard.
+- `git clone git@github.com:neuland/gitGuard.git` to clone this repository
+- `ln -s <CLONED_REPOSITORY_PATH> ~/.gitGuard`
+- `echo ". ~/.gitGuard/git.sh" >> ~/.bashrc` to 'activate' gitGuard (other configuration files may apply).
 
-- Configure gitGuard:
-- set up `@forbiddenMergeBranches` to include the names of those branches that are never allowed to be merged into other branches.
-- set up `@allowedBranchBranches` to include the names of those branches that git should be allowed to branch off of.
+## Configuration:
+- set up `@forbiddenMergeBranches` to include the names of branches that are never allowed to be merged into other branches.
+- set up `@allowedBranchBranches` to include the names of branches that git should be allowed to branch off of.
 
-If you use gitGuard in conjunction with [multigit](https://github.com/neuland/multigit), be sure to set `gitCommand = . ~/.gitGuard/git.sh && git` in your `.multigit.conf`, so that multigit uses gitGuard.
+- Example: If you would want to disallow merging branches 'foo' and 'bar' into other branches,
+you would define: `my @forbiddenMergeBranches = ("foo","bar");`.
+
+- If you use gitGuard in conjunction with [multigit](https://github.com/neuland/multigit), be sure to set `gitCommand = . ~/.gitGuard/git.sh && git` in your `.multigit.conf`,
+so that multigit uses the gitGuard wrapper.
 
 ## Usage example:
 
