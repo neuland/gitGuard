@@ -3,12 +3,16 @@
 use strict;
 use warnings;
 
+#########################################
+# Configuration
+my $branchFromFeature = 1;
 my $debug = 0;
 my $gitExecutable = &getGitExecutable();
 
 my @forbiddenMergeBranches = ("Ticket_Test_Branch");
 my @allowedBranchBranches = ("master");
 my $branchedFromInfoFilename = '.branched_from';
+#########################################
 
 # Enable autoflushing
 $| = 1;
@@ -65,8 +69,8 @@ if (&matchesAny($args, 0, @branchPattern)) {
       exit 1;
     }
   }
-  `date > $branchedFromInfoFilename`;
-  `echo "Branch: $branchname; $lastCommit" >> $branchedFromInfoFilename`;
+  $branchFromFeature && `date > $branchedFromInfoFilename`;
+  $branchFromFeature && `echo "Branch: $branchname; $lastCommit" >> $branchedFromInfoFilename`;
 } elsif (&matchesAny($args, 0, @mergePattern)) {
   for (my $i = 0; $i < @forbiddenMergeBranches; $i++) {
     if ($args =~ /\b$forbiddenMergeBranches[$i]\b/) {

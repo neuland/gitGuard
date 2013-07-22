@@ -13,6 +13,7 @@ Perl wrapper for git to restrict branching and merging
 - set up `@forbiddenMergeBranches` to include the names of branches that are never allowed to be merged into other branches.
 - set up `@allowedBranchBranches` to include the names of branches that git should be allowed to branch off of.
 
+- If you do not want gitGuard to write branching infos into a specified file (`.branched_from1` by default) set `$branchFromFeature = 0;`
 - Example: If you would want to disallow merging branches 'foo' and 'bar' into other branches,
 you would define: `my @forbiddenMergeBranches = ("foo","bar");`.
 
