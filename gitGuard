@@ -8,7 +8,6 @@ my $gitExecutable = &getGitExecutable();
 
 my @forbiddenMergeBranches = ("Ticket_Test_Branch");
 my @allowedBranchBranches = ("master");
-my $branchedFromInfoFilename = '.branched_from';
 
 # Enable autoflushing
 $| = 1;
@@ -48,10 +47,8 @@ my $args = join(' ', &prepareArgs(@ARGV));
 # so that the following (external) call to git is not executed.
 if (&matchesAny($args, 0, @branchPattern)) {
   my $branchname = `$gitExecutable branch | grep '^*'`;
-  my $lastCommit = `$gitExecutable log | head -n 1`;
   chomp($branchname);
-  chomp($lastCommit);
-  $debug && print "Branchname: $branchname, last $lastCommit\n";
+  $debug && print "Branchname: $branchname\n";
   if ($branchname eq "") {
     exit 1;
   }
@@ -65,8 +62,6 @@ if (&matchesAny($args, 0, @branchPattern)) {
       exit 1;
     }
   }
-  `date > $branchedFromInfoFilename`;
-  `echo "Branch: $branchname; $lastCommit" >> $branchedFromInfoFilename`;
 } elsif (&matchesAny($args, 0, @mergePattern)) {
   for (my $i = 0; $i < @forbiddenMergeBranches; $i++) {
     if ($args =~ /\b$forbiddenMergeBranches[$i]\b/) {
