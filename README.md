@@ -13,6 +13,7 @@ Perl wrapper for git to restrict branching and merging
 - set up `@forbiddenMergeBranches` to include the names of branches that are never allowed to be merged into other branches.
 - set up `@allowedBranchBranches` to include the names of branches that git should be allowed to branch off of.
 
+- If you don't want gitGuard to log your merges and branches into a log file (`~/.gitGuard.log` by default) set `$log = 0;`.
 - Example: If you would want to disallow merging branches 'foo' and 'bar' into other branches,
 you would define: `my @forbiddenMergeBranches = ("foo","bar");`.
 
