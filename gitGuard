@@ -3,11 +3,17 @@
 use strict;
 use warnings;
 
+########################################
+# Configuration
+#
 my $debug = 0;
+my $log = 1;
+my $logfile = "~/.gitGuard.log";
 my $gitExecutable = &getGitExecutable();
 
 my @forbiddenMergeBranches = ("Ticket_Test_Branch");
 my @allowedBranchBranches = ("master");
+########################################
 
 # Enable autoflushing
 $| = 1;
@@ -15,46 +21,24 @@ $| = 1;
 # find relevant aliases and add them to @mergePattern or @branchPattern
 my @branchPattern = ("\\bbranch\\b[^-]*\$","\\bcheckout\\b.*-[Bb]");
 my @mergePattern = ("\\bmerge\\b");
-
-my $aliases = `$gitExecutable config -l | grep -e "^alias.*\\(checkout\\|branch\\|merge\\)"`;
-$debug && print "Aliases:\n$aliases\n";
-my @alias = split('\n', $aliases);
-
-for (my $i = 0; $i < @alias; $i++) {
-  my ($key, $value) = split('=', $alias[$i]);
-  $key =~ s/^alias./\\b/;
-  if (&relevantValue($value)) {
-    $key .= "\\b";
-    if ($value =~ m/checkout/ && $value !~ m/-[Bb]/) {
-      $key .= ".*-[bB]";
-    } elsif ($value =~ m/branch/) {
-      $key .= "[^-]+\$";
-    }
-    if ($value =~ m/merge/) {
-      $debug && print "MergePattern: $key\n";
-      push(@mergePattern, $key);
-    } else {
-      $debug && print "BranchPattern: $key\n";
-      push(@branchPattern, $key);
-    }
-  }
-}
+&expandPatternsByAliases();
 
 # join all args into a string, surrounding params including spaces with quotes
 my $args = join(' ', &prepareArgs(@ARGV));
 
-# exit with a failure if something problematic is tries,
+# collect some information
+my $branchWeAreIn = &getGitBranchname();
+my $otherBranch = &getPossibleOtherBranch();
+my $lastCommit = &getLastCommit();
+
+# exit with a failure if something problematic is tried,
 # so that the following (external) call to git is not executed.
 if (&matchesAny($args, 0, @branchPattern)) {
-  my $branchname = `$gitExecutable branch | grep '^*'`;
-  chomp($branchname);
-  $debug && print "Branchname: $branchname\n";
-  if ($branchname eq "") {
+  if ($branchWeAreIn eq "") {
     exit 1;
   }
-  $branchname =~ s/^\* (\S*).*/$1/;
-  unless (&matchesAny($branchname, 1, @allowedBranchBranches)) {
-    print "\nYou are about to branch from '$branchname'.\n";
+  unless (&matchesAny($branchWeAreIn, 1, @allowedBranchBranches)) {
+    print "\nYou are about to branch from '$branchWeAreIn'.\n";
     print "Do you really want to do this?\n";
     print "\n  Type 'yes' if you do.\n\n";
     my $input = <STDIN>;
@@ -62,6 +46,8 @@ if (&matchesAny($args, 0, @branchPattern)) {
       exit 1;
     }
   }
+  $log && `date >> $logfile`;
+  $log && `echo "Branched '$otherBranch' from '$branchWeAreIn' ($lastCommit)\n" >> $logfile`;
 } elsif (&matchesAny($args, 0, @mergePattern)) {
   for (my $i = 0; $i < @forbiddenMergeBranches; $i++) {
     if ($args =~ /\b$forbiddenMergeBranches[$i]\b/) {
@@ -69,6 +55,8 @@ if (&matchesAny($args, 0, @branchPattern)) {
       exit 1;
     }
   }
+  $log && `date >> $logfile`;
+  $log && `echo "Merged '$otherBranch' into '$branchWeAreIn'\n" >> $logfile`;
 }
 
 # exit with success, so that the following (external) call to git is executed
@@ -109,8 +97,55 @@ sub prepareArgs {
 }
 
 sub getGitExecutable {
-  my $git = `which git`;
-  chomp($git);
-  $debug && print "Git: $gitExecutable\n";
-  return $git;
+  my $result = `which git`;
+  chomp($result);
+  $debug && print "result: $gitExecutable\n";
+  return $result;
+}
+
+sub getGitBranchname {
+  my $result = `$gitExecutable branch | grep '^*'`;
+  chomp($result);
+  $result =~ s/^\* (\S*).*/$1/;
+  $debug && print "result: $result\n";
+  return $result;
+}
+
+sub getLastCommit {
+  my $result = `$gitExecutable log | head -n 1`;
+  chomp($result);
+  $debug && print "result: $result\n";
+  return $result;
+}
+
+sub getPossibleOtherBranch {
+  my $result = $ARGV[-1];
+  $debug && print "Last argument: $result\n";
+  return $result;
+}
+
+sub expandPatternsByAliases {
+  my $aliases = `$gitExecutable config -l | grep -e "^alias.*\\(checkout\\|branch\\|merge\\)"`;
+  $debug && print "Aliases:\n$aliases\n";
+  my @alias = split('\n', $aliases);
+
+  for (my $i = 0; $i < @alias; $i++) {
+    my ($key, $value) = split('=', $alias[$i]);
+    $key =~ s/^alias./\\b/;
+    if (&relevantValue($value)) {
+      $key .= "\\b";
+      if ($value =~ m/checkout/ && $value !~ m/-[Bb]/) {
+        $key .= ".*-[bB]";
+      } elsif ($value =~ m/branch/) {
+        $key .= "[^-]+\$";
+      }
+      if ($value =~ m/merge/) {
+        $debug && print "MergePattern: $key\n";
+        push(@mergePattern, $key);
+      } else {
+        $debug && print "BranchPattern: $key\n";
+        push(@branchPattern, $key);
+      }
+    }
+  }
 }
