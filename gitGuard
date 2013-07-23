@@ -26,14 +26,12 @@ my @mergePattern = ("\\bmerge\\b");
 # join all args into a string, surrounding params including spaces with quotes
 my $args = join(' ', &prepareArgs(@ARGV));
 
-# collect some information
-my $branchWeAreIn = &getGitBranchname();
-my $otherBranch = &getPossibleOtherBranch();
-my $lastCommit = &getLastCommit();
-
 # exit with a failure if something problematic is tried,
 # so that the following (external) call to git is not executed.
 if (&matchesAny($args, 0, @branchPattern)) {
+  my $branchWeAreIn = &getGitBranchname();
+  my $otherBranch = &getPossibleOtherBranch();
+  my $lastCommit = &getLastCommit();
   if ($branchWeAreIn eq "") {
     exit 1;
   }
@@ -56,6 +54,9 @@ if (&matchesAny($args, 0, @branchPattern)) {
       exit 1;
     }
   }
+  my $branchWeAreIn = &getGitBranchname();
+  my $otherBranch = &getPossibleOtherBranch();
+
   $log && `date >> $logfile`;
   $log && `pwd >> $logfile`;
   $log && `echo "Merged '$otherBranch' into '$branchWeAreIn'\n" >> $logfile`;
