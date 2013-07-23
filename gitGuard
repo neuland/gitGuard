@@ -47,6 +47,7 @@ if (&matchesAny($args, 0, @branchPattern)) {
     }
   }
   $log && `date >> $logfile`;
+  $log && `pwd >> $logfile`;
   $log && `echo "Branched '$otherBranch' from '$branchWeAreIn' ($lastCommit)\n" >> $logfile`;
 } elsif (&matchesAny($args, 0, @mergePattern)) {
   for (my $i = 0; $i < @forbiddenMergeBranches; $i++) {
@@ -56,6 +57,7 @@ if (&matchesAny($args, 0, @branchPattern)) {
     }
   }
   $log && `date >> $logfile`;
+  $log && `pwd >> $logfile`;
   $log && `echo "Merged '$otherBranch' into '$branchWeAreIn'\n" >> $logfile`;
 }
 
