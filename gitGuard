@@ -6,7 +6,7 @@ use warnings;
 ########################################
 # Configuration
 #
-my $debug = 1;
+my $debug = 0;
 my $log = 1;
 my $logfile = "~/.gitGuard.log";
 
