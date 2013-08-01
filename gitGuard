@@ -19,7 +19,7 @@ my @allowedBranchBranches = ("master");
 $| = 1;
 
 # find relevant aliases and add them to @mergePattern or @branchPattern
-my @branchPattern = ("\\bbranch\\b[^-]*\$","\\bcheckout\\b.*-[Bb]");
+my @branchPattern = ("\\bbranch\\b[^-]+\$","\\bcheckout\\b.*-[Bb]");
 my @mergePattern = ("\\bmerge\\b");
 &expandPatternsByAliases();
 
