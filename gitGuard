@@ -10,7 +10,7 @@ my $debug = 0;
 my $log = 1;
 my $logfile = "~/.gitGuard.log";
 
-my @forbiddenMergeBranches = ("Ticket_Test_Branch");
+my @forbiddenMergeBranches = ("ticketTest_20140312");
 my @allowedBranchBranches = ("master");
 ########################################
 
