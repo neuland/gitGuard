@@ -91,8 +91,8 @@ sub matchesAny {
 sub prepareArgs {
   my @result;
   for (my $i = 0; $i < @_; $i++) {
-    if ($_[$i] =~ m/ /) {
-      $_[$i] = '"' . $_[$i] . '"';
+    if ($_[$i] =~ m/\s/) {         # if cmd-line arg contains whitespace
+      $_[$i] = '"' . $_[$i] . '"'; # surround it with quotes
     }
     push(@result, $_[$i]);
   }
@@ -100,23 +100,20 @@ sub prepareArgs {
 }
 
 sub getGitExecutable {
-  my $result = `which git`;
-  chomp($result);
+  my $result = &sys("which git");
   $debug && print "gitExexutable: $result\n";
   return $result;
 }
 
 sub getGitBranchname {
-  my $result = `$gitExecutable branch | grep '^*'`;
-  chomp($result);
+  my $result = &sys("$gitExecutable branch | grep '^*'");
   $result =~ s/^\* (\S*).*/$1/;
   $debug && print "current branch: $result\n";
   return $result;
 }
 
 sub getLastCommit {
-  my $result = `$gitExecutable log | head -n 1`;
-  chomp($result);
+  my $result = &sys("$gitExecutable log | head -n 1");
   $debug && print "last commit: $result\n";
   return $result;
 }
@@ -129,16 +126,22 @@ sub getPossibleOtherBranch {
 
 sub expandCommandByAliases {
   my $args = join(' ', &prepareArgs(@ARGV));
-  my $aliases = `$gitExecutable config -l`;
+  my $aliases = &sys("$gitExecutable config -l");
   my @alias = split('\n', $aliases);
   $debug && print "Args before: '$args'\n";
   for (my $i = 0; $i < @alias; $i++) {
     my ($key, $value) = split('=', $alias[$i]);
-    $key =~ s/^alias.//;
-    if ($args =~ m/^\s*$key\b/) {
+    if ($key =~ s/^alias.// && $args =~ m/^$key\b/) {
       $args =~ s/^\s*$key/$value/;
     }
   }
   $debug && print "Args after: '$args'\n";
   return $args;
+}
+
+sub sys {
+  my $cmd = shift;
+  my $result = `$cmd`;
+  chomp($result);
+  return $result;
 }
